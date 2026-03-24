@@ -9,7 +9,7 @@ pipeline {
                   -v "$WORKSPACE":/app \
                   -w /app \
                   maven:3.9.6-eclipse-temurin-17 \
-                  mvn -B clean package -DskipTests
+                  mvn clean package
                 '''
             }
         }
@@ -21,7 +21,7 @@ pipeline {
                   -v "$WORKSPACE":/app \
                   -w /app \
                   maven:3.9.6-eclipse-temurin-11 \
-                  mvn -B test
+                  mvn test
                 '''
             }
         }
@@ -31,11 +31,10 @@ pipeline {
                 withSonarQubeEnv('sonarqube') {
                     sh '''
                     docker run --rm \
-                      --network cicd-network \
                       -v "$WORKSPACE":/app \
                       -w /app \
                       maven:3.9.6-eclipse-temurin-8 \
-                      mvn -B sonar:sonar \
+                      mvn sonar:sonar \
                       -Dsonar.projectKey=java-app \
                       -Dsonar.host.url=$SONAR_HOST_URL \
                       -Dsonar.login=$SONAR_AUTH_TOKEN

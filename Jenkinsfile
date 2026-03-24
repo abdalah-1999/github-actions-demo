@@ -3,7 +3,6 @@ pipeline {
 
     environment {
         IMAGE_NAME = 'abdalahahmad/github-actions-demo:latest'
-        SONAR_TOKEN = credentials('sonarqube-token')
     }
 
     stages {
@@ -15,79 +14,43 @@ pipeline {
 
         stage('Build - Java 17') {
             steps {
-                sh '''
-                docker run --rm \
-                  --volumes-from jenkins \
-                  -w /var/jenkins_home/workspace/java-ci-cd \
-                  maven:3.9.6-eclipse-temurin-17 \
-                  mvn -B clean package -DskipTests
-                '''
+                sh 'docker run --rm --volumes-from jenkins -w /var/jenkins_home/workspace/java-ci-cd maven:3.9.6-eclipse-temurin-17 mvn -B clean package -DskipTests'
             }
         }
 
         stage('Test - Java 11') {
             steps {
-                sh '''
-                docker run --rm \
-                  --volumes-from jenkins \
-                  -w /var/jenkins_home/workspace/java-ci-cd \
-                  maven:3.9.6-eclipse-temurin-11 \
-                  mvn -B test
-                '''
+                sh 'docker run --rm --volumes-from jenkins -w /var/jenkins_home/workspace/java-ci-cd maven:3.9.6-eclipse-temurin-11 mvn -B test'
             }
         }
 
         stage('SonarQube Analysis - Java 17') {
             steps {
                 withSonarQubeEnv('sonarqube') {
-                    sh '''
-                    docker run --rm \
-                      --network cicd-network \
-                      --volumes-from jenkins \
-                      -w /var/jenkins_home/workspace/java-ci-cd \
-                      maven:3.9.6-eclipse-temurin-17 \
-                      mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:4.0.0.4121:sonar \
-                      -Dsonar.projectKey=java-app \
-                      -Dsonar.host.url=http://sonarqube:9000 \
-                      -Dsonar.token=$SONAR_AUTH_TOKEN
-                    '''
+                    sh 'docker run --rm --network cicd-network --volumes-from jenkins -w /var/jenkins_home/workspace/java-ci-cd maven:3.9.6-eclipse-temurin-17 mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:4.0.0.4121:sonar -Dsonar.projectKey=java-app -Dsonar.host.url=http://sonarqube:9000 -Dsonar.login=$SONAR_AUTH_TOKEN'
                 }
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh '''
-                docker build -t abdalahahmad/github-actions-demo:latest .
-                '''
+                sh 'docker build -t $IMAGE_NAME .'
             }
         }
 
         stage('Push Docker Image') {
             steps {
                 withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-creds',
+                    credentialsId: 'dockerhub-cred',
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
                     sh '''
-                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                    docker push abdalahahmad/github-actions-demo:latest
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        docker push $IMAGE_NAME
                     '''
                 }
             }
-        }
-    }
-
-    post {
-        always {
-            sh 'docker logout || true'
-        }
-        success {
-            echo 'Pipeline completed successfully.'
-        }
-        failure {
-            echo 'Pipeline failed.'
         }
     }
 }

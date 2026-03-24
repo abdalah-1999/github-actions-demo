@@ -1,7 +1,18 @@
 pipeline {
     agent any
 
+    environment {
+        IMAGE_NAME = 'abdalahahmad/github-actions-demo:latest'
+        SONAR_TOKEN = credentials('sonarqube-token')
+    }
+
     stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
         stage('Build - Java 17') {
             steps {
                 sh '''
@@ -37,8 +48,8 @@ pipeline {
                       maven:3.9.6-eclipse-temurin-17 \
                       mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:4.0.0.4121:sonar \
                       -Dsonar.projectKey=java-app \
-                      -Dsonar.host.url=$SONAR_HOST_URL \
-                      -Dsonar.login=$SONAR_AUTH_TOKEN
+                      -Dsonar.host.url=http://sonarqube:9000 \
+                      -Dsonar.token=$SONAR_AUTH_TOKEN
                     '''
                 }
             }
@@ -46,14 +57,16 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t abdalahahmad/github-actions-demo:latest .'
+                sh '''
+                docker build -t abdalahahmad/github-actions-demo:latest .
+                '''
             }
         }
 
         stage('Push Docker Image') {
             steps {
                 withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-cred',
+                    credentialsId: 'dockerhub-creds',
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
@@ -63,6 +76,18 @@ pipeline {
                     '''
                 }
             }
+        }
+    }
+
+    post {
+        always {
+            sh 'docker logout || true'
+        }
+        success {
+            echo 'Pipeline completed successfully.'
+        }
+        failure {
+            echo 'Pipeline failed.'
         }
     }
 }

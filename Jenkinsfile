@@ -6,10 +6,10 @@ pipeline {
             steps {
                 sh '''
                 docker run --rm \
-                  -v "$WORKSPACE":/app \
-                  -w /app \
+                  --volumes-from jenkins \
+                  -w /var/jenkins_home/workspace/java-ci-cd \
                   maven:3.9.6-eclipse-temurin-17 \
-                  mvn clean package
+                  mvn -B clean package -DskipTests
                 '''
             }
         }
@@ -18,10 +18,10 @@ pipeline {
             steps {
                 sh '''
                 docker run --rm \
-                  -v "$WORKSPACE":/app \
-                  -w /app \
+                  --volumes-from jenkins \
+                  -w /var/jenkins_home/workspace/java-ci-cd \
                   maven:3.9.6-eclipse-temurin-11 \
-                  mvn test
+                  mvn -B test
                 '''
             }
         }
@@ -31,10 +31,11 @@ pipeline {
                 withSonarQubeEnv('sonarqube') {
                     sh '''
                     docker run --rm \
-                      -v "$WORKSPACE":/app \
-                      -w /app \
+                      --network cicd-network \
+                      --volumes-from jenkins \
+                      -w /var/jenkins_home/workspace/java-ci-cd \
                       maven:3.9.6-eclipse-temurin-8 \
-                      mvn sonar:sonar \
+                      mvn -B sonar:sonar \
                       -Dsonar.projectKey=java-app \
                       -Dsonar.host.url=$SONAR_HOST_URL \
                       -Dsonar.login=$SONAR_AUTH_TOKEN
@@ -45,7 +46,7 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t abdalahahmad/github-actions-demo:latest .'
+                sh 'docker build -t abdalahahmad/github-actions-demo:latest /var/jenkins_home/workspace/java-ci-cd'
             }
         }
     }

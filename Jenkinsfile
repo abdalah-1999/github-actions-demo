@@ -26,7 +26,7 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis - Java 8') {
+        stage('SonarQube Analysis - Java 11') {
             steps {
                 withSonarQubeEnv('sonarqube') {
                     sh '''
@@ -34,7 +34,7 @@ pipeline {
                       --network cicd-network \
                       --volumes-from jenkins \
                       -w /var/jenkins_home/workspace/java-ci-cd \
-                      maven:3.9.6-eclipse-temurin-8 \
+                      maven:3.9.6-eclipse-temurin-11 \
                       mvn -B sonar:sonar \
                       -Dsonar.projectKey=java-app \
                       -Dsonar.host.url=$SONAR_HOST_URL \

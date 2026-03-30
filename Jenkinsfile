@@ -79,7 +79,7 @@ pipeline {
                           -e KUBECONFIG=/tmp/kubeconfig \
                           -w /var/jenkins_home/workspace/java-ci-cd \
                           bitnami/kubectl:latest \
-                          kubectl apply -f k8s/
+                          apply -f k8s/
                     '''
                 }
             }

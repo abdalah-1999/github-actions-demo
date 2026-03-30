@@ -42,7 +42,7 @@ pipeline {
         stage('SonarQube Analysis - Java 17') {
             steps {
                 withSonarQubeEnv("${SONARQUBE_SERVER}") {
-                    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                    withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
                         sh '''
                         docker run --rm \
                           --network cicd-network \

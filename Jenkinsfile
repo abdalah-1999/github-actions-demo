@@ -71,14 +71,19 @@ pipeline {
             steps {
                 withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG_FILE')]) {
                     sh '''
+                        cp "$KUBECONFIG_FILE" kubeconfig
+                        chmod 644 kubeconfig
+
                         docker run --rm \
                           --network cicd-network \
                           --add-host=host.docker.internal:host-gateway \
                           --volumes-from jenkins \
-                          -e KUBECONFIG="$KUBECONFIG_FILE" \
+                          -e KUBECONFIG=/var/jenkins_home/workspace/java-ci-cd/kubeconfig \
                           -w /var/jenkins_home/workspace/java-ci-cd \
                           bitnami/kubectl:latest \
                           apply -f k8s/
+
+                        rm -f kubeconfig
                     '''
                 }
             }

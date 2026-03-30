@@ -69,14 +69,7 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                sh '''
-                    docker run --rm \
-                      --network cicd-network \
-                      --volumes-from jenkins \
-                      -w /var/jenkins_home/workspace/java-ci-cd \
-                      bitnami/kubectl:latest \
-                      apply -f k8s/deployment.yaml
-                '''
+                bat 'kubectl apply -f k8s\\deployment.yaml'
             }
         }
     }

@@ -75,8 +75,7 @@ pipeline {
                           --network cicd-network \
                           --add-host=host.docker.internal:host-gateway \
                           --volumes-from jenkins \
-                          -v "$KUBECONFIG_FILE:/tmp/kubeconfig:ro" \
-                          -e KUBECONFIG=/tmp/kubeconfig \
+                          -e KUBECONFIG="$KUBECONFIG_FILE" \
                           -w /var/jenkins_home/workspace/java-ci-cd \
                           bitnami/kubectl:latest \
                           apply -f k8s/

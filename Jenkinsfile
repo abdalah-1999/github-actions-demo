@@ -69,7 +69,19 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                bat 'kubectl apply -f k8s\\deployment.yaml'
+                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG_FILE')]) {
+                    sh '''
+                        docker run --rm \
+                          --network cicd-network \
+                          --add-host=host.docker.internal:host-gateway \
+                          --volumes-from jenkins \
+                          -v "$KUBECONFIG_FILE:/tmp/kubeconfig:ro" \
+                          -e KUBECONFIG=/tmp/kubeconfig \
+                          -w /var/jenkins_home/workspace/java-ci-cd \
+                          bitnami/kubectl:latest \
+                          kubectl apply -f k8s/
+                    '''
+                }
             }
         }
     }

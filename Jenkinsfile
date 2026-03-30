@@ -76,8 +76,8 @@ pipeline {
                 docker run --rm \
                 --network cicd-network \
                 --volumes-from jenkins \
-                -w /var/jenkins_home/workspace/java-ci-cd \
-                bitnami/kubectl:latest apply -f k8s/deployment.yaml
+                -v /c/k8s:/k8s \
+                bitnami/kubectl:latest apply -f /k8s/deployment.yaml
                 '''
             }
         }
